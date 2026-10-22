@@ -361,6 +361,14 @@ const server = createServer((request, response) => {
     return;
   }
 
+  if (pathname === "/step1.html") {
+    response.writeHead(302, {
+      "Cache-Control": "no-store",
+      Location: "/",
+    }).end();
+    return;
+  }
+
   const staticPath = pathname === "/" ? "/index.html" : pathname;
   serveStaticFile(staticPath, response, request.method === "HEAD");
 });

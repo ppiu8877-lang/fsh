@@ -680,25 +680,29 @@
                 items,
               }),
             });
-            const result = await response.json();
+            const responseText = await response.text();
+            let result;
+            try {
+              result = JSON.parse(responseText);
+            } catch {
+              if (!response.ok) {
+                throw new Error(`رفض الخادم الطلب (HTTP ${response.status}).`);
+              }
+              throw new Error("استجابة الخادم غير صالحة.");
+            }
             if (!response.ok) {
               throw new Error(result.error || "تعذر إرسال الإشعار.");
             }
-            showStatus(
-              `تم إرسال بيانات الطلب والتوصيل إلى المتجر عبر تيليجرام. رقم الطلب: ${result.orderId}.`,
-              "success"
-            );
+            if (result.ok !== true || typeof result.orderId !== "string") {
+              throw new Error("لم يتم تأكيد استلام الطلب من المتجر.");
+            }
+            window.location.assign("./step3.html?order=received");
           } catch (error) {
             console.error("تعذر إرسال إشعار الطلب:", error);
-            showStatus(
-              error instanceof TypeError
-                ? "تعذر الاتصال بالخادم. افتح المتجر عبر الخادم المحلي أو استضافة مهيأة، وليس بفتح الملف مباشرة."
-                : error.message,
-              "error"
-            );
-          } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = "اشتري الآن";
+            const message = error instanceof TypeError
+              ? "تعذر الاتصال بخادم الطلبات."
+              : error.message;
+            window.location.assign(`./step3.html?order=unconfirmed&reason=${encodeURIComponent(message.slice(0, 180))}`);
           }
         });
 

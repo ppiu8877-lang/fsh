@@ -328,6 +328,20 @@
         color: #286b35;
       }
 
+      .status.submission-error {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #fff1f1;
+        color: #a3232d;
+      }
+
+      .status.submission-success {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #eaf7ef;
+        color: #17643a;
+      }
+
       .status[hidden],
       .cart-error[hidden] {
         display: none;
@@ -352,6 +366,7 @@
   <body>
     <main>
       <h1>الدفع</h1>
+      <p id="order-submission-status" class="status" role="status" aria-live="polite" hidden></p>
 
       <section class="methods" role="radiogroup" aria-label="طرق الدفع">
         <label class="method">
@@ -429,11 +444,24 @@
         const itemsElement = document.getElementById("summary-items");
         const errorElement = document.getElementById("cart-error");
         const statusElement = document.getElementById("payment-status");
+        const orderSubmissionStatus = document.getElementById("order-submission-status");
         const payButton = document.getElementById("pay-button");
         const paymentMethods = document.querySelectorAll('input[name="payment-method"]');
         const formatter = new Intl.NumberFormat("en", {
           maximumFractionDigits: 3,
         });
+        const orderParams = new URLSearchParams(window.location.search);
+
+        if (orderParams.get("order") === "received") {
+          orderSubmissionStatus.textContent = "تم إرسال الطلب إلى المتجر بنجاح.";
+          orderSubmissionStatus.className = "status submission-success";
+          orderSubmissionStatus.hidden = false;
+        } else if (orderParams.get("order") === "unconfirmed") {
+          const reason = orderParams.get("reason");
+          orderSubmissionStatus.textContent = `لم يتم تأكيد إرسال الطلب إلى المتجر${reason ? `: ${reason}` : ""} يرجى التواصل مع المتجر قبل المتابعة.`;
+          orderSubmissionStatus.className = "status submission-error";
+          orderSubmissionStatus.hidden = false;
+        }
 
         function updatePaymentStatus() {
           const selectedMethod = document.querySelector('input[name="payment-method"]:checked');
